@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>パーセントバルーン</title>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bgc: #00b140;
+  --navy: #0d0a26;
+  --panel: #1a1744;
+  --line: #3b36a0;
+  --ink: #f4f2ff;
+  --mute: #a4a1e0;
+  --gold: #ffd700;
+  --gold-grad: linear-gradient(180deg, #ffe875 0%, #d49b00 100%);
+  --red: #ff2a2a;
+  --blue: #1e62ff;
+  --disp: "Dela Gothic One", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  color-scheme: dark;
+  box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: inherit; }
+body { margin: 0; background: var(--navy); color: var(--ink); font-family: var(--body); font-weight: 700; line-height: 1.6; }
+main { max-width: 1100px; margin: 0 auto; padding: 14px; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+h1 { font-family: var(--disp); font-weight: 400; font-size: clamp(20px, 3.5vw, 30px); margin: 0; }
+.frame { border-radius: 12px; overflow: hidden; border: 3px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+/* STAGE & CHROMA KEY */
+.stage { container-type: inline-size; position: relative; width: 100%; aspect-ratio: 16/9; background: var(--bgc); overflow: hidden; font-family: var(--disp); user-select: none; }
+.stage.flash::after { content: ""; position: absolute; inset: 0; background: #fff; animation: fl .7s ease-out forwards; pointer-events: none; }
+@keyframes fl { 0% { opacity: 0.95; } 100% { opacity: 0; } }
+
+.tl { color: #fff; -webkit-text-stroke: 0.45cqw #000; paint-order: stroke fill; text-shadow: 0 0.3cqw 0.5cqw rgba(0,0,0,0.8); }
+
+/* BALLOONS & ROPES */
+.cluster { position: absolute; left: 4cqw; top: 2cqw; width: 44cqw; height: 34cqw; filter: drop-shadow(0 0.8cqw 0.4cqw rgba(0,0,0,0.3)); }
+.b { position: absolute; width: 3.2cqw; height: 3.7cqw; border-radius: 50% 50% 48% 48%/55% 55% 45% 45%; border: 0.15cqw solid #000;
+  background: radial-gradient(ellipse at 30% 26%, rgba(255,255,255,0.9) 0 12%, transparent 13%), radial-gradient(circle at 40% 35%, var(--c), color-mix(in srgb, var(--c) 60%, #000)); }
+.b::after { content: ""; position: absolute; left: 50%; bottom: -0.45cqw; transform: translateX(-50%); border: 0.3cqw solid transparent; border-top: 0.5cqw solid var(--c); }
+.b.off { visibility: hidden; }
+.b.pop { animation: pop .28s ease-out forwards; }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.6); opacity: 1; filter: brightness(1.8); } 100% { transform: scale(2.4); opacity: 0; } }
+.b.in { animation: inn .4s cubic-bezier(.2,1.7,.4,1); }
+@keyframes inn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+.ropes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* TOP INFO (REMAIN & PLATES) */
+.info { position: absolute; left: 50cqw; top: 2cqw; width: 46cqw; display: flex; flex-direction: column; gap: 1cqw; }
+.q { font-size: 2.5cqw; color: #fff; text-shadow: 0 0.2cqw 0.4cqw #000; } 
+.q i { font-style: normal; font-size: 1.8cqw; opacity: 0.8; }
+
+.remain-box { background: linear-gradient(180deg, #1f1b4d 0%, #0b0924 100%); border: 0.35cqw solid #ffd700; border-radius: 1.2cqw; padding: 0.5cqw 1.5cqw; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 0.5cqw 1cqw rgba(0,0,0,0.6); position: relative; }
+.remain-label { font-size: 2.8cqw; color: #fff; -webkit-text-stroke: 0.4cqw #000; }
+.remain-val { font-size: 7cqw; line-height: 1; color: var(--gold); -webkit-text-stroke: 0.6cqw #000; text-shadow: 0 0 1cqw rgba(255,215,0,0.5); }
+.delta { position: absolute; right: -1cqw; top: -1.5cqw; font-size: 4.5cqw; font-family: var(--disp); -webkit-text-stroke: 0.5cqw #000; }
+.delta.m { color: #ff3333; } .delta.p { color: #00ff66; }
+
+.plates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1cqw; margin-top: 0.5cqw; }
+.plate { background: linear-gradient(180deg, #2a2566 0%, #120f38 100%); border: 0.3cqw solid #fff; border-radius: 1cqw; text-align: center; padding: 0.4cqw; box-shadow: 0 0.4cqw 0.8cqw rgba(0,0,0,0.5); }
+.plate em { display: block; font-style: normal; font-size: 1.6cqw; -webkit-text-stroke: 0.3cqw #000; }
+.plate.b { border-color: #5c93ff; } .plate.b em { color: #8db4ff; }
+.plate.r { border-color: #ff5c5c; } .plate.r em { color: #ff8a8a; }
+.plate.y { border-color: #ffd700; } .plate.y em { color: var(--gold); }
+.plate span { display: block; font-size: 4.5cqw; line-height: 1.1; color: #fff; -webkit-text-stroke: 0.5cqw #000; }
+
+/* LOWER GAUGE (NEPU-LEAGUE STYLE) */
+.gbox { position: absolute; left: 3cqw; bottom: 2cqw; width: 94cqw; background: linear-gradient(180deg, #4a341b 0%, #1f1408 100%); border: 0.4cqw solid #ffd700; border-radius: 1.2cqw; padding: 2.2cqw 1.5cqw 1.2cqw; box-shadow: 0 0.8cqw 1.5cqw rgba(0,0,0,0.7); }
+.track-container { position: relative; width: 100%; height: 4.5cqw; background: #111; border: 0.35cqw solid #000; border-radius: 0.6cqw; overflow: visible; box-shadow: inset 0 0 1cqw #000; }
+
+/* Gauge Grid Lines (Every 1%) */
+.track-bg { position: absolute; inset: 0; background: linear-gradient(90deg, #e6b800 0%, #ff3333 100%); }
+.track-grid { position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.4) 0px, rgba(0,0,0,0.4) 1px, transparent 1px, transparent 1%); }
+
+.track .t { position: absolute; top: -1.8cqw; transform: translateX(-50%); font-size: 1.2cqw; color: #fff; font-family: var(--body); font-weight: 900; -webkit-text-stroke: 0.25cqw #000; }
+
+.gap { position: absolute; top: 0; bottom: 0; background: rgba(0, 0, 0, 0.65); opacity: 0; border-left: 0.2cqw solid #fff; border-right: 0.2cqw solid #fff; }
+
+/* Sweeping Needle */
+.needle { position: absolute; top: -0.5cqw; bottom: -0.5cqw; width: 0.6cqw; margin-left: -0.3cqw; background: #fff; border: 0.15cqw solid #000; box-shadow: 0 0 0.8cqw #fff; opacity: 0; z-index: 5; }
+
+/* Pin Markers (Guess: Blue Downward / Correct: Red Upward) */
+.mk { position: absolute; width: 0; height: 0; opacity: 0; z-index: 6; transition: opacity .3s; }
+.mk.g { top: -0.4cqw; border-left: 1.2cqw solid transparent; border-right: 1.2cqw solid transparent; border-top: 1.8cqw solid var(--blue); transform: translateX(-50%); filter: drop-shadow(0 0.3cqw 0.2cqw #000); }
+.mk.c { bottom: -0.4cqw; border-left: 1.2cqw solid transparent; border-right: 1.2cqw solid transparent; border-bottom: 1.8cqw solid var(--red); transform: translateX(-50%); filter: drop-shadow(0 -0.3cqw 0.2cqw #000); }
+
+.mk span { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 2.2cqw; font-family: var(--disp); }
+.mk.g span { bottom: 1.9cqw; color: #66acff; -webkit-text-stroke: 0.4cqw #000; }
+.mk.c span { top: 1.9cqw; color: #ff6666; -webkit-text-stroke: 0.4cqw #000; }
+
+.on { opacity: 1 !important; }
+
+/* FINAL RESULT OVERLAY */
+.final { position: absolute; inset: 0; display: none; place-items: center; background: rgba(0,0,0,0.6); z-index: 10; }
+.final.on { display: grid; }
+.final .box { background: linear-gradient(180deg, #2a2566 0%, #0d0a26 100%); border: 0.6cqw solid var(--gold); border-radius: 2cqw; padding: 3cqw 6cqw; text-align: center; box-shadow: 0 1cqw 3cqw rgba(0,0,0,0.8); animation: pp .5s cubic-bezier(.2,1.5,.4,1); }
+@keyframes pp { 0% { transform: scale(.3); } 100% { transform: scale(1); } }
+.final .a { font-size: 3.5cqw; color: #fff; -webkit-text-stroke: 0.4cqw #000; }
+.final .n { font-size: 12cqw; line-height: 1; color: var(--gold); -webkit-text-stroke: 0.8cqw #000; text-shadow: 0 0 1.5cqw rgba(255,215,0,0.6); }
+.final .p { font-size: 3.8cqw; color: #fff; -webkit-text-stroke: 0.4cqw #000; }
+
+/* CONTROL PANELS */
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.panel { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 14px; }
+.panel h2 { margin: 0 0 8px; font-size: 17px; }
+label { display: block; font-size: 14px; color: var(--mute); margin: 8px 0 3px; }
+input[type=number], input[type=password], select { width: 100%; font: inherit; font-size: 19px; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--line); background: #0c0a2c; color: var(--ink); }
+input[type=range] { width: 100%; accent-color: var(--gold); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+button { font: inherit; font-weight: 900; font-size: 16px; padding: 10px 18px; border-radius: 12px; border: 0; cursor: pointer; background: var(--gold-grad); color: #000; min-height: 44px; box-shadow: 0 4px 0 #997000; }
+button:active { transform: translateY(2px); box-shadow: 0 2px 0 #997000; }
+button.sub { background: transparent; color: var(--ink); border: 2px solid var(--line); box-shadow: none; }
+button:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; transform: none; }
+.status { font-size: 14px; color: var(--mute); margin: 6px 0 0; } .status.ok { color: var(--gold); }
+details { margin-top: 14px; } summary { cursor: pointer; color: var(--mute); }
+.set { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 2px 18px; }
+.chk { display: flex; gap: 8px; align-items: center; color: var(--ink); margin-top: 12px; }
+table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 15px; }
+th, td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: center; }
+.tw { overflow-x: auto; }
+
+/* SHOOT MODE */
+body.shoot { overflow: hidden; }
+body.shoot .bar, body.shoot .panels, body.shoot details { display: none; }
+body.shoot main { max-width: none; padding: 0; }
+body.shoot .frame { position: fixed; inset: 0; z-index: 9; border: 0; border-radius: 0; background: var(--bgc); display: grid; place-items: center; }
+body.shoot .stage { width: min(100vw, calc(100vh * 16 / 9)); }
+@media(max-width:720px){ .panels { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<div class="bar">
+  <h1>パーセントバルーン</h1>
+  <div class="row"><button class="sub" id="shoot">撮影モード（Hキー）</button></div>
+</div>
+
+<div class="frame">
+  <section class="stage" id="stage" aria-live="polite">
+    <!-- Balloon Cluster & Ropes -->
+    <div class="cluster" id="cluster"></div>
+    <svg class="ropes" viewBox="0 0 100 56.25" aria-hidden="true">
+      <path d="M17 33 L22.5 38 M35 33 L29.5 38 M26 34.5 L26 38 M21 34 L24 38 M31 34 L28 38 M12 31 L22 38 M40 31 L30 38" stroke="#331e08" stroke-width=".4" fill="none"/>
+      <path d="M22.3 38.6h7.4l-.9 6q0 .7-.8.7h-4q-.8 0-.8-.7z" fill="#d79a45" stroke="#000" stroke-width=".35"/>
+      <rect x="21.4" y="37.6" width="9.2" height="1.3" rx=".5" fill="#a8692a" stroke="#000" stroke-width=".35"/>
+      <path d="M22.8 41h6.4M23.1 43h5.8" stroke="#000" stroke-width=".22"/>
+    </svg>
+
+    <!-- Info UI (Top Right) -->
+    <div class="info">
+      <div class="q tl">第<b id="qn">1</b>問 <i id="qt">/ 5</i></div>
+      <div class="remain-box">
+        <span class="remain-label">のこり</span>
+        <span class="remain-val" id="rem">100</span>
+        <span class="remain-label">こ</span>
+        <span class="delta" id="delta"></span>
+      </div>
+      <div class="plates">
+        <div class="plate b"><em>予想</em><span id="pg">--</span></div>
+        <div class="plate r"><em>正解</em><span id="pc">--</span></div>
+        <div class="plate y"><em>誤差</em><span id="pe">--</span></div>
+      </div>
+    </div>
+
+    <!-- Nepu-League Style Meter (Bottom) -->
+    <div class="gbox">
+      <div class="track-container" id="track">
+        <div class="track-bg"></div>
+        <div class="track-grid"></div>
+        <div class="gap" id="gap"></div>
+        <div class="needle" id="needle"></div>
+        <div class="mk g" id="mg"><span id="mgl">予想 50%</span></div>
+        <div class="mk c" id="mc"><span id="mcl">正解 74%</span></div>
+      </div>
+    </div>
+
+    <!-- Final Result Popup -->
+    <div class="final" id="final">
+      <div class="box">
+        <div class="a">最終結果</div>
+        <div class="n" id="fn">0</div>
+        <div class="p" id="fp"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Control Panels -->
+<div class="panels">
+  <section class="panel">
+    <h2>出題者（正解をこっそり設定）</h2>
+    <label for="ans">正解のパーセンテージ</label>
+    <div class="row">
+      <input id="ans" type="password" inputmode="numeric" autocomplete="off" placeholder="0〜100" style="flex:1">
+      <button id="setAns">セット</button>
+    </div>
+    <p class="status" id="ansSt">未設定</p>
+  </section>
+
+  <section class="panel">
+    <h2>解答者（予想を入力）</h2>
+    <label for="gs">予想のパーセンテージ</label>
+    <input id="gs" type="range" min="0" max="100" value="50">
+    <div class="row" style="margin-top:8px">
+      <input id="gn" type="number" min="0" max="100" value="50" aria-label="予想の数値" style="flex:1">
+      <button id="go" disabled>決定</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="sub" id="next" disabled>次の問題</button>
+      <button class="sub" id="reset">最初から</button>
+    </div>
+  </section>
+</div>
+
+<details>
+  <summary>設定（風船の数・演出・音・背景色）</summary>
+  <div class="panel" style="margin-top:10px">
+    <div class="set">
+      <div><label for="ini">最初の風船の数</label><input id="ini" type="number" min="1" max="120" value="100"></div>
+      <div><label for="bn">ピッタリ賞で増える風船</label><input id="bn" type="number" min="0" max="20" value="10"></div>
+      <div><label for="tq">問題数</label><input id="tq" type="number" min="1" max="10" value="5"></div>
+      <div><label for="bg">背景色</label><select id="bg"><option value="#00b140">クロマキーグリーン</option><option value="#0047bb">クロマキーブルー</option><option value="#0d0a26">濃紺</option></select></div>
+      <div><label for="tt">焦らす時間：<b id="ttv">8</b>秒</label><input id="tt" type="range" min="2" max="20" value="8"></div>
+      <div><label for="dr">ドラムロール開始：<b id="drv">50</b>%地点</label><input id="dr" type="range" min="0" max="90" step="5" value="50"></div>
+      <div><label for="sl">発表前の無音：<b id="slv">1.5</b>秒</label><input id="sl" type="range" min="0" max="5" step="0.5" value="1.5"></div>
+      <div><label for="pm">風船が割れる間隔：<b id="pmv">80</b>ms</label><input id="pm" type="range" min="30" max="300" step="10" value="80"></div>
+      <div><label for="vol">音量：<b id="volv">60</b>%</label><input id="vol" type="range" min="0" max="100" value="60"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="snd" checked>効果音を鳴らす</label>
+    <label class="chk"><input type="checkbox" id="drum" checked>ドラムロールを入れる</label>
+  </div>
+</details>
+
+<details open>
+  <summary>結果の履歴</summary>
+  <div class="tw"><table><thead><tr><th>問</th><th>予想</th><th>正解</th><th>誤差</th><th>のこり</th></tr></thead><tbody id="hist"></tbody></table></div>
+</details>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
+const ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const anim=(d,fn)=>new Promise(res=>{const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/d);fn(p);p<1?requestAnimationFrame(f):res()})(t0)});
+let correct=null,busy=false,ac=null,nbuf=null,q=1;
+
+/* ---- audio ---- */
+function audio(){try{if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();nbuf=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}if(ac.state==='suspended')ac.resume()}catch(e){ac=null}}
+const vol=()=>$('vol').value/100,on=()=>ac&&$('snd').checked;
+function tone(f,d,type='square',g=.12,delay=0){if(!on())return;try{const t=ac.currentTime+delay,o=ac.createOscillator(),a=ac.createGain();o.type=type;o.frequency.value=f;a.gain.setValueAtTime(g*vol(),t);a.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(a).connect(ac.destination);o.start(t);o.stop(t+d)}catch(e){}}
+function noise(d,g,ft,fq){if(!on())return;try{const s=ac.createBufferSource(),f=ac.createBiquadFilter(),a=ac.createGain();s.buffer=nbuf;f.type=ft;f.frequency.value=fq;a.gain.setValueAtTime(g*vol(),ac.currentTime);a.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);s.connect(f).connect(a).connect(ac.destination);s.start();s.stop(ac.currentTime+d+.01)}catch(e){}}
+const snare=g=>noise(.07,g,'bandpass',1800);
+const popSnd=()=>{noise(.09,.6,'highpass',1500);tone(180+Math.random()*180,.08,'sine',.35)};
+const hit=()=>{tone(80,.4,'sine',.5);snare(.5)};
+const win=()=>[523,659,784,1047].forEach((f,i)=>tone(f,.35,'triangle',.2,i*.1));
+const lose=()=>{tone(220,.5,'sawtooth',.15);tone(165,.7,'sawtooth',.15,.25)};
+
+/* ---- balloon cluster ---- */
+const ROWS=[4,7,10,12,14,14,14,14,12,10,7,4],CAP=122,PAL=['#ff3b3b','#ffd23f','#2b6cff','#ff6fb1','#ff8a1f','#ffffff','#8a5cff','#35c8ff'];
+const slots=[];
+(function(){const cl=$('cluster');let k=0;ROWS.forEach((n,r)=>{for(let i=0;i<n;i++){const x=22+(i-(n-1)/2)*3.1-1.5,y=r*2.55,el=document.createElement('div');
+el.className='b off';el.style.cssText='left:'+x+'cqw;top:'+y+'cqw;--c:'+PAL[(k*5+r)%PAL.length];cl.appendChild(el);
+slots.push({el,alive:false,d:Math.hypot(x+1.5-22,(y+1.7-15)*1.25)});k++}})})();
+const order=slots.slice().sort((a,b)=>a.d-b.d);
+const alive=()=>slots.filter(s=>s.alive);
+const upRem=()=>{$('rem').textContent=alive().length};
+function fill(n){order.forEach((s,i)=>{s.alive=i<n;s.el.className='b'+(s.alive?'':' off')});upRem()}
+function popOne(){const a=alive();if(!a.length)return false;const s=a[Math.floor(Math.random()*a.length)];s.alive=false;s.el.className='b pop';setTimeout(()=>{if(!s.alive)s.el.className='b off'},300);popSnd();upRem();return true}
+function addOne(){const s=order.find(s=>!s.alive);if(!s)return false;s.alive=true;s.el.className='b in';tone(600+alive().length*3,.06,'triangle',.12);upRem();return true}
+
+/* ---- gauge track markers ---- */
+(function(){for(let i=0;i<=10;i++){const t=document.createElement('span');t.className='t';t.style.left=i*10+'%';t.textContent=i*10;$('track').prepend(t)}})();
+const pos=(el,v)=>{el.style.left=v+'%'};
+function clearRound(){
+  ['mg','mc','gap','needle'].forEach(i=>$(i).classList.remove('on'));
+  $('pg').textContent=$('pc').textContent=$('pe').textContent='--';
+  $('delta').textContent='';$('delta').className='delta';$('final').classList.remove('on');
+}
+
+/* ---- sequence ---- */
+async function run(){
+  if(busy||correct===null)return;
+  busy=true;audio();
+  const g=clamp(Math.round(+$('gn').value||0)),c=correct;
+  const T=$('tt').value*1000,S=$('sl').value*1000,D=$('dr').value/100,PM=+$('pm').value;
+  ['go','next','reset','gs','gn'].forEach(i=>$(i).disabled=true);
+  clearRound();
+  pos($('mg'),g);$('mgl').textContent='予想 '+g+'%';$('mg').classList.add('on');$('pg').textContent=g;$('pc').textContent='??';
+  tone(660,.15,'triangle',.2);
+  await wait(800);
+
+  /* tension: needle sweeps while the number flickers, then hides */
+  $('needle').classList.add('on');
+  let drumT=null,last=-1;
+  await anim(T,p=>{
+    if(!drumT&&$('drum').checked&&p>=D)drumT=setInterval(()=>snare(.18),55);
+    const v=clamp(g+(c-g)*ease(p)+Math.sin(p*Math.PI*3.2)*(1-p)*28),r=Math.round(v);
+    pos($('needle'),v);
+    if(p<.85){$('pc').textContent=r;if(r!==last){last=r;tone(300+r*7,.05,'square',.07)}}else $('pc').textContent='??';
+  });
+  if(drumT)clearInterval(drumT);
+  await wait(S);
+
+  /* reveal */
+  $('stage').classList.remove('flash');void $('stage').offsetWidth;$('stage').classList.add('flash');
+  hit();
+  $('needle').classList.remove('on');
+  pos($('mc'),c);$('mcl').textContent='正解 '+c+'%';$('mc').classList.add('on');$('pc').textContent=c;
+  const df=Math.abs(g-c);
+  $('gap').style.left=Math.min(g,c)+'%';$('gap').style.width=df+'%';$('gap').classList.add('on');
+  await wait(600);
+  let le=-1;
+  await anim(Math.min(1500,400+df*25),p=>{const e=Math.round(df*p);$('pe').textContent=e;if(e!==le){le=e;tone(400+e*6,.04,'square',.08)}});
+  $('pe').textContent=df;
+  await wait(500);
+
+  /* balloons */
+  const before=alive().length;
+  if(df===0){
+    const b=+$('bn').value;win();
+    for(let i=0;i<b;i++){if(!addOne())break;await wait(110)}
+    $('delta').textContent='+'+(alive().length-before);$('delta').className='delta p';
+  }else{
+    for(let i=0;i<df;i++){if(!popOne())break;$('delta').textContent='−'+(i+1);$('delta').className='delta m';await wait(PM)}
+    lose();
+  }
+  const left=alive().length;
+  $('hist').insertAdjacentHTML('beforeend','<tr><td>'+q+'</td><td>'+g+'%</td><td>'+c+'%</td><td>'+df+'</td><td>'+left+'</td></tr>');
+  await wait(900);
+  if(q>=+$('tq').value||left===0){
+    $('fn').textContent=left;$('fp').textContent=left===0?'全部割れてしまった…':'= '+left+' ポイント';$('final').classList.add('on');
+    if(left>0)win();
+    $('next').textContent='最初から';
+  }else{$('next').textContent='次の問題'}
+  $('next').disabled=false;$('reset').disabled=false;busy=false;
+}
+
+/* ---- setup / events ---- */
+function resetAll(){
+  q=1;correct=null;$('qn').textContent=1;$('qt').textContent='/ '+$('tq').value;
+  fill(Math.min(CAP,Math.max(1,+$('ini').value||100)));clearRound();
+  $('hist').innerHTML='';$('next').textContent='次の問題';$('next').disabled=true;$('go').disabled=true;$('gs').disabled=$('gn').disabled=false;
+  $('ansSt').textContent='未設定';$('ansSt').className='status';
+}
+$('setAns').onclick=()=>{
+  const v=Math.round(+$('ans').value);
+  if($('ans').value===''||isNaN(v)||v<0||v>100){$('ansSt').textContent='0〜100の数字を入れてください';$('ansSt').className='status';return}
+  correct=v;$('ans').value='';$('ansSt').textContent='セット済み（値は非表示）';$('ansSt').className='status ok';$('go').disabled=busy||$('gn').disabled;
+};
+$('ans').addEventListener('keydown',e=>{if(e.key==='Enter')$('setAns').click()});
+$('gs').oninput=()=>{$('gn').value=$('gs').value};
+$('gn').oninput=()=>{$('gs').value=clamp(Math.round(+$('gn').value||0))};
+$('go').onclick=run;
+$('next').onclick=()=>{
+  if($('next').textContent==='最初から'){resetAll();return}
+  q++;$('qn').textContent=q;correct=null;clearRound();$('next').disabled=true;$('go').disabled=true;$('gs').disabled=$('gn').disabled=false;
+  $('ansSt').textContent='未設定';$('ansSt').className='status';
+};
+$('reset').onclick=()=>{if(!busy)resetAll()};
+[['tt','ttv'],['dr','drv'],['sl','slv'],['pm','pmv'],['vol','volv']].forEach(([a,b])=>{$(a).oninput=()=>{$(b).textContent=$(a).value}});
+$('ini').onchange=$('tq').onchange=()=>{if(!busy&&q===1&&!$('hist').children.length)resetAll()};
+$('bg').onchange=()=>document.documentElement.style.setProperty('--bgc',$('bg').value);
+function shoot(f){document.body.classList.toggle('shoot',f);if(f){try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}catch(e){}}else if(document.fullscreenElement){try{document.exitFullscreen()}catch(e){}}}
+$('shoot').onclick=()=>shoot(true);
+document.addEventListener('keydown',e=>{const t=e.target.tagName;if(t==='INPUT'||t==='SELECT'||t==='TEXTAREA')return;if(e.key==='h'||e.key==='H')shoot(!document.body.classList.contains('shoot'));if(e.key==='Escape')shoot(false)});
+resetAll();
+</script>
+</body>
+</html>
